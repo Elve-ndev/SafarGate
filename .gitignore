@@ -1,0 +1,13 @@
+.venv/
+node_modules/
+__pycache__/
+.env
+*.pyc
+.DS_Store
+dist/
+build/
+.gemini/
+.agents/
+backend/.env
+Frontend/Frontend/node_modules/
+Frontend/Frontend/dist/
