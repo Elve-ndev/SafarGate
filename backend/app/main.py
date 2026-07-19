@@ -2,6 +2,22 @@ from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import os
 from typing import List, Dict, Any, Optional
+from backend.app.submission_engine import build_submission
+
+class SubmissionRequest(BaseModel):
+    household_id: str
+    annualized_income: float
+    household_size: int
+    citations: List[Dict[str, Any]]
+    packet_status: str
+    review_reasons: Optional[List[str]] = None
+
+@app.post("/submission")
+async def get_submission(req: SubmissionRequest):
+    return build_submission(
+        req.household_id, req.annualized_income, req.household_size,
+        req.citations, req.packet_status, req.review_reasons
+    )
 
 app = FastAPI(title="RealDoor Backend API", description="Deterministic Calculator and Temporary Upload Handler")
 
