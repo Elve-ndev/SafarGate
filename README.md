@@ -243,14 +243,17 @@ npm run dev
 
 ## 📱 Application Screenshots
 
-> **Add application demo screenshots here:**
+
 
 ```
-[Screenshots showing:]
-1. Profile Step — Document upload with extracted evidence
-2. Understand Step — Rules question with citation
-3. Prepare Step — Checklist preview & export
-4. Trust & Safety Panel — Session transparency
+<img width="1411" height="880" alt="2df3ef55-65c6-48dd-b031-7a38a156bd8b" src="https://github.com/user-attachments/assets/ef5178da-9555-4b08-a7e5-dd68057a2a0f" />
+
+
+<img width="1171" height="860" alt="ea26c171-b852-4b08-9d77-945f4e22aeb5" src="https://github.com/user-attachments/assets/7ec81337-fd18-4b4a-8009-4444b5372aa4" />
+
+
+<img width="952" height="881" alt="b05a8a17-e9ea-4d7c-8be7-fa2f1432d082" src="https://github.com/user-attachments/assets/7c3706b0-1f05-4f28-80ca-c006671e2b61" />
+
 ```
 
 ---
