@@ -740,6 +740,9 @@ const S = {
 const LIMITS = { 1:72000, 2:82320, 3:92580, 4:102840, 5:111120, 6:119340, 7:127560, 8:135780 };
 const RULE_DOC = "LIHTC Income Limits — 2026 Schedule";
 const RULE_DATE = "2026-05-01";
+const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:8000'
+  : 'https://safar-backend.onrender.com'; // CHANGE THIS to your production Render backend URL!
 
 function t(key, vars){
   let s = T[S.lang][key] ?? T.en[key] ?? key;
@@ -1274,7 +1277,7 @@ async function processSelectedFiles() {
       const formData = new FormData();
       formData.append("file", f._file);
       try {
-        const res = await fetch("http://localhost:8000/upload", { method: "POST", body: formData });
+        const res = await fetch(`${API_BASE}/upload`, { method: "POST", body: formData });
         if (!res.ok) {
           const errText = await res.text();
           alert("Backend /upload error: " + errText);
@@ -1306,7 +1309,7 @@ async function processSelectedFiles() {
           
           // Call validate_profile to get annualized income
           if (gross_pay && pay_period) {
-             const vRes = await fetch("http://localhost:8000/validate_profile", {
+             const vRes = await fetch(`${API_BASE}/validate_profile`, {
                method: "POST",
                headers: { "Content-Type": "application/json" },
                body: JSON.stringify({
@@ -1449,7 +1452,7 @@ function onClick(e){
     S.testResults.del = true;
     S.uploadedDocTypes = [];
     render(); announce(t('announceDeleted'));
-    fetch("http://localhost:8000/session", { method: "DELETE" }).catch(console.error);
+    fetch(`${API_BASE}/session`, { method: "DELETE" }).catch(console.error);
     return;
   }
 
@@ -1477,7 +1480,7 @@ async function doAsk(kind){
   
   if (kind !== 'qualify') {
       try {
-          const res = await fetch("http://localhost:8000/understand", {
+          const res = await fetch(`${API_BASE}/understand`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -1533,7 +1536,7 @@ async function triggerDownload(){
   };
 
   try {
-    const res = await fetch("http://localhost:8000/export", {
+    const res = await fetch(`${API_BASE}/export`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
