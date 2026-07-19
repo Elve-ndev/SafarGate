@@ -198,10 +198,6 @@ python -m app.main
 # 7. In a new terminal, start the frontend
 cd frontend
 npm run dev
-```
-
-**Frontend**: Open http://localhost:5173 (or as shown in terminal)  
-**Backend API**: http://localhost:8000 (docs at /docs)
 
 ---
 
