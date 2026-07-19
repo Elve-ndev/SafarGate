@@ -236,8 +236,6 @@ cd frontend
 npm run dev
 ```
 
-**Frontend**: Open http://localhost:5173 (or as shown in terminal)  
-**Backend API**: http://localhost:8000 (docs at /docs)
 
 ---
 
@@ -245,16 +243,16 @@ npm run dev
 
 
 
-```
-<img width="1411" height="880" alt="2df3ef55-65c6-48dd-b031-7a38a156bd8b" src="https://github.com/user-attachments/assets/ef5178da-9555-4b08-a7e5-dd68057a2a0f" />
 
 
-<img width="1171" height="860" alt="ea26c171-b852-4b08-9d77-945f4e22aeb5" src="https://github.com/user-attachments/assets/7ec81337-fd18-4b4a-8009-4444b5372aa4" />
+
+![Profile Step](https://github.com/user-attachments/assets/ef5178da-9555-4b08-a7e5-dd68057a2a0f)
+
+![Understand Step](https://github.com/user-attachments/assets/7ec81337-fd18-4b4a-8009-4444b5372aa4)
+
+![Prepare Step](https://github.com/user-attachments/assets/7c3706b0-1f05-4f28-80ca-c006671e2b61)
 
 
-<img width="952" height="881" alt="b05a8a17-e9ea-4d7c-8be7-fa2f1432d082" src="https://github.com/user-attachments/assets/7c3706b0-1f05-4f28-80ca-c006671e2b61" />
-
-```
 
 ---
 
