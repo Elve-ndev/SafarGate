@@ -108,16 +108,16 @@ async def validate_profile(req: ProfileRequest):
         hh_size = int(req.household_size)
         SESSION_STORE["household_size"] = hh_size
         
-        # Track income source (Critique 5)
-        employer = req.employer_name or "default_source"
-        SESSION_STORE["income_sources"][employer] = annualized
+        # Track income source by unique document ID/date to prevent overwriting same-employer documents (Critique 5)
+        doc_id = req.date_issued or f"source_{len(SESSION_STORE['income_sources'])}"
+        SESSION_STORE["income_sources"][doc_id] = annualized
         
         total_income = sum(SESSION_STORE["income_sources"].values())
         
         SESSION_STORE["last_profile"] = {
             "annualized_income": total_income,
             "household_size": hh_size,
-            "employer_name": employer,
+            "employer_name": req.employer_name or "default_source",
             "date_issued": req.date_issued
         }
     except Exception as e:
