@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 import os
 from typing import List, Dict, Any, Optional
@@ -16,14 +16,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Stateful global session store (Critique 3)
-SESSION_STORE = {
-    "uploaded_documents": [],
-    "income_sources": {},
-    "household_size": 1,
-    "last_profile": None,
-    "readiness": None
-}
+# Stateful global session stores mapped by unique Session IDs (Critique 3 & ADV-002)
+SESSION_STORES = {}
+
+def get_session_store(request: Request) -> Dict[str, Any]:
+    session_id = request.headers.get("X-Session-ID", "default_session")
+    if session_id not in SESSION_STORES:
+        SESSION_STORES[session_id] = {
+            "uploaded_documents": [],
+            "income_sources": {},
+            "household_size": 1,
+            "last_profile": None,
+            "readiness": None
+        }
+    return SESSION_STORES[session_id]
 
 class SubmissionRequest(BaseModel):
     household_id: str
@@ -47,7 +53,7 @@ def read_root():
 from ai.extraction_pipeline import process_pdf
 
 @app.post("/upload")
-async def upload_document(file: UploadFile = File(...)):
+async def upload_document(request: Request, file: UploadFile = File(...)):
     if not file.filename.endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are supported.")
 
@@ -64,7 +70,8 @@ async def upload_document(file: UploadFile = File(...)):
         if field_value is not None:
             field_value.document_id = file.filename
 
-    # Save to stateful session store (Critique 3)
+    # Save to stateful session store
+    session = get_session_store(request)
     doc_type = extracted_data.document_type if getattr(extracted_data, "document_type", None) else "unknown"
     doc_data = {
         "filename": file.filename,
@@ -75,7 +82,7 @@ async def upload_document(file: UploadFile = File(...)):
         "pay_period": extracted_data.pay_period.value if extracted_data.pay_period else None,
         "household_size": extracted_data.household_size.value if extracted_data.household_size else None
     }
-    SESSION_STORE["uploaded_documents"].append(doc_data)
+    session["uploaded_documents"].append(doc_data)
 
     return {
         "status": "success",
@@ -97,24 +104,25 @@ class ProfileRequest(BaseModel):
     date_issued: Optional[str] = None
 
 @app.post("/validate_profile")
-async def validate_profile(req: ProfileRequest):
+async def validate_profile(request: Request, req: ProfileRequest):
     """
     Step 2: Profile.
     Takes user-confirmed extracted data, deterministically calculates annualized income.
     Supports summing multiple income sources (Critique 5).
     """
+    session = get_session_store(request)
     try:
         annualized = calculate_annualized_income(req.gross_pay, req.pay_period)
         hh_size = int(req.household_size)
-        SESSION_STORE["household_size"] = hh_size
+        session["household_size"] = hh_size
         
         # Track income source by unique document ID/date to prevent overwriting same-employer documents (Critique 5)
-        doc_id = req.date_issued or f"source_{len(SESSION_STORE['income_sources'])}"
-        SESSION_STORE["income_sources"][doc_id] = annualized
+        doc_id = req.date_issued or f"source_{len(session['income_sources'])}"
+        session["income_sources"][doc_id] = annualized
         
-        total_income = sum(SESSION_STORE["income_sources"].values())
+        total_income = sum(session["income_sources"].values())
         
-        SESSION_STORE["last_profile"] = {
+        session["last_profile"] = {
             "annualized_income": total_income,
             "household_size": hh_size,
             "employer_name": req.employer_name or "default_source",
@@ -170,15 +178,16 @@ class PrepareRequest(BaseModel):
     documents: Optional[List[Dict[str, Any]]] = None
 
 @app.post("/prepare")
-async def prepare_packet(req: PrepareRequest):
+async def prepare_packet(request: Request, req: PrepareRequest):
     """
     Step 4: Prepare.
     Checks the user's documents against the checklist.
     """
+    session = get_session_store(request)
     try:
-        docs = req.documents if req.documents is not None else SESSION_STORE["uploaded_documents"]
+        docs = req.documents if req.documents is not None else session["uploaded_documents"]
         readiness = check_packet_readiness(docs)
-        SESSION_STORE["readiness"] = readiness
+        session["readiness"] = readiness
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to check readiness: {str(e)}")
         
@@ -188,27 +197,29 @@ async def prepare_packet(req: PrepareRequest):
     }
 
 @app.get("/session")
-async def get_session():
+async def get_session(request: Request):
     """
     Verification route (Critique 3).
     Allows checking that the session was deleted or viewing current values.
     """
+    session = get_session_store(request)
     return {
         "status": "success",
-        "session_data": SESSION_STORE
+        "session_data": session
     }
 
 @app.delete("/session")
-async def delete_session():
+async def delete_session(request: Request):
     """
     Step 5: Security Delete Test.
     Wipes all temporary files, session states, and in-memory lists (Critique 3).
     """
-    SESSION_STORE["uploaded_documents"] = []
-    SESSION_STORE["income_sources"] = {}
-    SESSION_STORE["household_size"] = 1
-    SESSION_STORE["last_profile"] = None
-    SESSION_STORE["readiness"] = None
+    session = get_session_store(request)
+    session["uploaded_documents"] = []
+    session["income_sources"] = {}
+    session["household_size"] = 1
+    session["last_profile"] = None
+    session["readiness"] = None
     return {
         "status": "success",
         "message": "All session data, including uploaded documents and extracted fields, has been permanently deleted from memory."
@@ -254,4 +265,3 @@ async def export_packet(req: ExportRequest):
         content=packet_text, 
         headers={"Content-Disposition": 'attachment; filename="realdoor_application_packet.txt"'}
     )
-
