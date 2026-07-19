@@ -9,7 +9,11 @@ def generate_export_packet(profile_data: Dict[str, Any], rule_data: Dict[str, An
     
     threshold = rule_data.get('threshold', 0.0)
     comparison = rule_data.get('comparison', 'Unknown')
-    rule_id = rule_data.get('rule_cited', {}).get('rule_id', 'N/A')
+    rule_cited = rule_data.get('rule_cited', {})
+    rule_id = rule_cited.get('rule_id', 'N/A')
+    effective_date = rule_cited.get('effective_date', '2026-05-01')
+    source_url = rule_cited.get('source_url', 'N/A')
+    source_locator = rule_cited.get('source_locator', 'N/A')
     
     status = readiness_data.get('status', 'UNKNOWN')
     missing = readiness_data.get('missing_documents', [])
@@ -22,16 +26,21 @@ def generate_export_packet(profile_data: Dict[str, Any], rule_data: Dict[str, An
     
     packet.append("--- APPLICANT PROFILE ---")
     packet.append(f"Household Size: {hh_size}")
-    packet.append(f"Confirmed Annualized Income: ${annualized:,.2f}\n")
+    packet.append(f"Confirmed Annualized Income: ${annualized:,.2f}")
+    packet.append("Income Calculation Formula: sum(gross_pay * frequency for each source)\n")
     
     packet.append("--- RULE EVALUATION ---")
-    packet.append(f"Applicable HUD Rule: {rule_id}")
+    packet.append(f"Applicable HUD Rule ID: {rule_id}")
+    packet.append(f"Rule Source Link: {source_url}")
+    packet.append(f"Source Locator: {source_locator}")
+    packet.append(f"Effective Date: {effective_date}")
     packet.append(f"Official Income Limit (Threshold): ${threshold:,.2f}")
+    packet.append("Comparison Formula: Confirmed Annualized Income <= Official Income Limit (60% AMI)")
     
     if comparison == "below_or_equal":
-        packet.append("Result: Income is AT OR BELOW the limit.")
+        packet.append("Evaluation Result: Confirmed Income is AT OR BELOW the program limit.")
     else:
-        packet.append("Result: Income is ABOVE the limit.")
+        packet.append("Evaluation Result: Confirmed Income is ABOVE the program limit.")
     packet.append("\n*Note: This is an informational evaluation, not a final eligibility decision.*\n")
     
     packet.append("--- PACKET READINESS ---")
